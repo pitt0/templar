@@ -1,12 +1,12 @@
 [project]
-name = "replacer"
+name = "templar"
 version = "0.1.0"
-description = "Replaces all instances of --keyword-- with given values"
+description = "Templar is a template renderer. Takes in input any kind of template with keywords surrounded by double dashes and resolves them with a dict of values."
 readme = "README.md"
 authors = [
     { name = "pitt0", email = "pitto.developer@gmail.com" }
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = []
 
 [build-system]
