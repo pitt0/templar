@@ -5,12 +5,16 @@ type Evaluable = dict | list
 type Representable = str | int | float
 
 
-def evaluate_keyords(keywords: Iterable[str], values: Mapping[str, Convertible], fail: bool) -> Mapping[str, Representable]:
+def evaluate_keywords(
+    keywords: Iterable[str],
+    values: Mapping[str, Convertible],
+    fail: bool,
+) -> Mapping[str, Representable]:
     """Evaluate and resolve keyword-value mappings according to provided evaluation rules.
 
-    This function iterates over a list of keyword identifiers, attempts to evaluate 
-    the corresponding objects from the `values` mapping, and returns a new mapping 
-    of evaluated results. Keywords may include dotted paths (e.g., "config.option") 
+    This function iterates over a list of keyword identifiers, attempts to evaluate
+    the corresponding objects from the `values` mapping, and returns a new mapping
+    of evaluated results. Keywords may include dotted paths (e.g., "config.option")
     to indicate nested evaluation through `_evaluate_object`.
 
     Parameters
@@ -20,7 +24,7 @@ def evaluate_keyords(keywords: Iterable[str], values: Mapping[str, Convertible],
     values : Mapping[str, Convertible]
         A mapping of keyword names to convertible objects or values to be evaluated.
     fail : bool
-        If True, raises a `ValueError` when encountering a non-representable value. 
+        If True, raises a `ValueError` when encountering a non-representable value.
         If False, substitutes `"N\\A"` instead.
 
     Returns
@@ -35,7 +39,7 @@ def evaluate_keyords(keywords: Iterable[str], values: Mapping[str, Convertible],
 
     Notes
     -----
-    - If a keyword contains a dot (e.g., `"a.b"`), the base key before the dot is used 
+    - If a keyword contains a dot (e.g., `"a.b"`), the base key before the dot is used
       to evaluate a sub-object via `_evaluate_object`.
     - Assumes the existence of `_evaluate_object` for nested path evaluation.
     """
@@ -44,7 +48,7 @@ def evaluate_keyords(keywords: Iterable[str], values: Mapping[str, Convertible],
     for keyword in keywords:
         if keyword in values:
             val = values[keyword]
-            if not isinstance(val, Representable):
+            if not isinstance(val, (str, int, float)):
                 if fail:
                     raise ValueError()
                 else:
@@ -52,20 +56,20 @@ def evaluate_keyords(keywords: Iterable[str], values: Mapping[str, Convertible],
 
             evaluated[keyword] = val
 
-        if '.' not in keyword:
+        if "." not in keyword:
             # Runs both if the keyword is in values and if it isn't
             continue
 
-        kw, path = keyword.split('.', maxsplit=1)
+        kw, path = keyword.split(".", maxsplit=1)
         if kw not in values:
             continue
 
-        evaluated[keyword] = _evaluate_object(values[kw], path)
+        evaluated[keyword] = _evaluate_object(values[kw], path, fail)
 
     return evaluated
 
 
-def _evaluate_object(obj: Evaluable, path: str, fail: bool) -> Representable:
+def _evaluate_object(obj: Convertible, path: str, fail: bool) -> Representable:
     """Recursively resolve a dotted attribute or sequence path on an object.
 
     This function takes an object and a dot-delimited path (e.g., `"a.b.c"`),
@@ -108,11 +112,12 @@ def _evaluate_object(obj: Evaluable, path: str, fail: bool) -> Representable:
     >>> _evaluate_object(f, 'bar.missing', fail=False)
     'N\\A'
     """
-    for attr in path.split('.'):
+    new: Representable = obj
+    for attr in path.split("."):
         if hasattr(obj, attr):
-            obj = getattr(obj, attr)
-        elif attr.isnumeric() and isintance(obj, Sequence):
-            obj = obj[int(attr)]
+            new = getattr(obj, attr)
+        elif attr.isnumeric() and isinstance(obj, Sequence):
+            new = obj[int(attr)]
 
         else:
             if fail:
@@ -120,5 +125,4 @@ def _evaluate_object(obj: Evaluable, path: str, fail: bool) -> Representable:
             else:
                 return r"N\A"
 
-    return obj
-
+    return new

@@ -2,12 +2,12 @@ from typing import Iterable
 import re
 
 
-def parse_keywords(obj: str) -> Iterable[str]:
+def parse_template(obj: str) -> Iterable[str]:
     """Extract all unique keywords wrapped in double dashes from a string.
 
     A keyword is defined as any substring enclosed by `--`, for example
     `--foo--` or `--foo.bar123--`. The function returns all such keywords
-    in the order they first appear. If a closing `--` is missing, the 
+    in the order they first appear. If a closing `--` is missing, the
     substring up to the end of the string is still returned (best-effort).
 
     Parameters
